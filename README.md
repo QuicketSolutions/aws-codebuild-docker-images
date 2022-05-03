@@ -1,3 +1,10 @@
+# Quicket Fork
+
+This repository holds Quicket Solutions customized codebuild images.
+
+Derived builds are on branches:
++ [quicket/packer](https://github.com/QuicketSolutions/aws-codebuild-docker-images/tree/quicket/packer): A [ubuntu/standard/5.0](https://github.com/QuicketSolutions/aws-codebuild-docker-images/tree/quicket/packer/ubuntu/standard/5.0) build that includes Packer and [packer-plugin-amazon](https://github.com/hashicorp/packer-plugin-amazon) with Go 1.17.
+
 # AWS CodeBuild curated Docker images
 
 This repository holds Dockerfiles of official AWS CodeBuild curated Docker images. Please refer to [the AWS CodeBuild User Guide](http://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref.html) for list of environments supported by AWS CodeBuild.
