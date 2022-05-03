@@ -300,9 +300,11 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin -
 #****************     GOLANG     ****************************************************
 ENV GOLANG_15_VERSION="1.15.12"
 ENV GOLANG_16_VERSION="1.16.4"
+ENV GOLANG_17_VERSION="1.17.9"
 
 RUN goenv install $GOLANG_15_VERSION && rm -rf /tmp/* && \
     goenv install $GOLANG_16_VERSION && rm -rf /tmp/* && \
+    goenv install $GOLANG_17_VERSION && rm -rf /tmp/* && \
     goenv global  $GOLANG_15_VERSION
 
 RUN go get -u github.com/golang/dep/cmd/dep
@@ -447,7 +449,39 @@ VOLUME /var/lib/docker
 #*********************** END  DOCKER  ****************************
 
 #=======================End of layer: corretto  =================
-FROM runtimes_n_corretto AS std_v5
+FROM runtimes_n_corretto AS packer
+
+ARG PACKER_BUCKET="releases.hashicorp.com"
+ARG PACKER_VERSION="1.8.0"
+ARG PACKER_PLATFORM="linux_amd64"
+ARG PACKER_SHA256="94c5d65386fa8f17e36d3496fbbdf18d3bfab01306aa8000c14656b63070b7c2"
+
+RUN set -ex \
+        && curl -fSL "https://${PACKER_BUCKET}/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${PACKER_PLATFORM}.zip" -o packer.zip \
+        && echo "${PACKER_SHA256} *packer.zip" | sha256sum -c - \
+        && unzip -d /usr/local/bin packer.zip \
+        && rm packer.zip \
+        && chown root:root /usr/local/bin/packer \
+        && chmod 755 /usr/local/bin/packer \
+        && packer --version
+
+ARG PACKER_PLUGIN_AMAZON_BUCKET="github.com"
+ARG PACKER_PLUGIN_AMAZON_VERSION="v1.0.9"
+ARG PACKER_PLUGIN_API_VERSION="x5.0"
+ARG PACKER_PLUGIN_AMAZON_SHA256="597bc95d8b836d7fce800b150d6257e68940fd4c656d8d1e15d9f062742ccd8f"
+
+RUN set -ex \
+        && curl -fSL "https://${PACKER_PLUGIN_AMAZON_BUCKET}/hashicorp/packer-plugin-amazon/releases/download/${PACKER_PLUGIN_AMAZON_VERSION}/packer-plugin-amazon_${PACKER_PLUGIN_AMAZON_VERSION}_${PACKER_PLUGIN_API_VERSION}_${PACKER_PLATFORM}.zip" -o packer-plugin-amazon.zip \
+        && echo "${PACKER_PLUGIN_AMAZON_SHA256} *packer-plugin-amazon.zip" | sha256sum -c - \
+        && unzip packer-plugin-amazon.zip \
+        && mv "packer-plugin-amazon_${PACKER_PLUGIN_AMAZON_VERSION}_${PACKER_PLUGIN_API_VERSION}_${PACKER_PLATFORM}" /usr/local/bin/packer-plugin-amazon \
+        && rm packer-plugin-amazon.zip \
+        && chown root:root /usr/local/bin/packer-plugin-amazon \
+        && chmod 755 /usr/local/bin/packer-plugin-amazon
+
+#=======================End of layer: packer
+
+FROM packer AS std_v5
 
 # Activate runtime versions specific to image version.
 RUN n $NODE_14_VERSION
