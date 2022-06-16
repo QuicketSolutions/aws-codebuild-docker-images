@@ -417,6 +417,8 @@ RUN rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && apt-get clean
 #****************     END JAVA     ****************************************************
 
+FROM runtimes_n_corretto AS tool_docker
+
 #****************        DOCKER    *********************************************
 ARG DOCKER_BUCKET="download.docker.com"
 ARG DOCKER_CHANNEL="stable"
@@ -449,7 +451,7 @@ VOLUME /var/lib/docker
 #*********************** END  DOCKER  ****************************
 
 #=======================End of layer: corretto  =================
-FROM runtimes_n_corretto AS packer
+FROM tool_docker AS tool_packer
 
 ARG PACKER_BUCKET="releases.hashicorp.com"
 ARG PACKER_VERSION="1.8.0"
@@ -481,7 +483,7 @@ RUN set -ex \
 
 #=======================End of layer: packer
 
-FROM packer AS std_v5
+FROM tool_packer AS std_v5
 
 # Activate runtime versions specific to image version.
 RUN n $NODE_14_VERSION
